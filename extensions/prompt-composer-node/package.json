@@ -5,10 +5,11 @@
   "private": true,
   "scripts": {
     "build": "tsc",
-    "dev": "ts-node server/src/index.ts"
+    "dev": "ts-node server/src/index.ts",
+    "test": "echo \"Tests not yet implemented\""
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.1.1",
+    "@modelcontextprotocol/sdk": "^1.0.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

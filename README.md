@@ -2,7 +2,7 @@
 
 <div align="center">
 
-[![CI](https://github.com/yourusername/mcp-builds-mono/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/mcp-builds-mono/actions/workflows/ci.yml)
+[![CI](https://github.com/cryptomax96/mcp-builds-mono/actions/workflows/ci.yml/badge.svg)](https://github.com/cryptomax96/mcp-builds-mono/actions/workflows/ci.yml)
 [![Security](https://img.shields.io/badge/Security-A%2B-brightgreen)](security/SECURITY.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![DXT Spec](https://img.shields.io/badge/DXT-0.1-blue)](https://modelcontextprotocol.io/docs)
@@ -58,7 +58,7 @@ mcp-builds-mono/
 ### Install an Extension
 
 #### Option 1: From Release
-1. Download `.dxt` file from [Releases](https://github.com/yourusername/mcp-builds-mono/releases)
+1. Download `.dxt` file from [Releases](https://github.com/cryptomax96/mcp-builds-mono/releases)
 2. Drag into Claude Desktop → Settings → Extensions
 3. Configure required settings (API keys, directories)
 
@@ -274,9 +274,9 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file for
 
 ## 📮 Support
 
-- 📖 [Documentation](https://github.com/yourusername/mcp-builds-mono/wiki)
-- 💬 [Discussions](https://github.com/yourusername/mcp-builds-mono/discussions)
-- 🐛 [Issue Tracker](https://github.com/yourusername/mcp-builds-mono/issues)
+- 📖 [Documentation](https://github.com/cryptomax96/mcp-builds-mono/wiki)
+- 💬 [Discussions](https://github.com/cryptomax96/mcp-builds-mono/discussions)
+- 🐛 [Issue Tracker](https://github.com/cryptomax96/mcp-builds-mono/issues)
 - 📧 Email: support@mcp-builds.dev
 
 ---
