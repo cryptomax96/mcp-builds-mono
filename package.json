@@ -1,0 +1,58 @@
+{
+  "name": "mcp-builds-mono",
+  "version": "0.1.0",
+  "description": "Production-ready MCP servers for Claude Desktop Extensions",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "setup": "make setup",
+    "build": "make build",
+    "test": "make test",
+    "lint": "make lint",
+    "format": "make format",
+    "security:scan": "make security-scan",
+    "pack:all": "make pack-all",
+    "validate:all": "make validate",
+    "ci": "make ci",
+    "dev": "make dev",
+    "clean": "make clean",
+    "release": "make release"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/mcp-builds-mono.git"
+  },
+  "keywords": [
+    "mcp",
+    "claude",
+    "claude-desktop",
+    "extensions",
+    "dxt",
+    "ai",
+    "model-context-protocol",
+    "anthropic",
+    "typescript",
+    "python"
+  ],
+  "author": "MCP Builds Team",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/yourusername/mcp-builds-mono/issues"
+  },
+  "homepage": "https://github.com/yourusername/mcp-builds-mono#readme",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "eslint": "^8.50.0",
+    "prettier": "^3.0.0",
+    "typescript": "^5.0.0"
+  },
+  "workspaces": [
+    "extensions/*",
+    "tooling/*",
+    "packages/*"
+  ]
+}

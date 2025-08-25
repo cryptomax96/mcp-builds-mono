@@ -1,0 +1,59 @@
+{
+  "dxt_version": "0.1",
+  "name": "my-basic-extension",
+  "display_name": "My Basic Extension",
+  "version": "1.0.0",
+  "description": "A simple MCP extension for file operations",
+  "author": {
+    "name": "Your Name",
+    "email": "you@example.com"
+  },
+  "license": "MIT",
+  "icon": "icon.png",
+  "homepage": "https://github.com/yourusername/my-extension",
+  "compatibility": {
+    "dxt_version": ">=0.1.0",
+    "claude_desktop": ">=1.0.0"
+  },
+  "categories": ["file-management"],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/index.js"
+      ],
+      "env": {
+        "NODE_ENV": "production",
+        "ALLOWED_DIRS": "${user_config.allowed_directories}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "health_check",
+      "description": "Check server health and status"
+    },
+    {
+      "name": "read_file_sandboxed",
+      "description": "Read a file within allowed directories"
+    },
+    {
+      "name": "list_directory",
+      "description": "List contents of a directory"
+    }
+  ],
+  "user_config": {
+    "allowed_directories": {
+      "type": "directory",
+      "title": "Allowed Directories",
+      "description": "Directories this extension can access",
+      "multiple": true,
+      "required": true,
+      "default": [
+        "${HOME}/Documents"
+      ]
+    }
+  }
+}

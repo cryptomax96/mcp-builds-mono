@@ -1,0 +1,52 @@
+{
+  "dxt_version": "0.1",
+  "name": "fs-sandbox-python",
+  "display_name": "File System (Sandboxed) \u2013 Python",
+  "version": "0.1.0",
+  "description": "Read/search files within user-approved directories.",
+  "author": {
+    "name": "MCP Builds"
+  },
+  "server": {
+    "type": "python",
+    "entry_point": "server/main.py",
+    "mcp_config": {
+      "command": "python",
+      "args": [
+        "${__dirname}/server/main.py"
+      ],
+      "env": {
+        "ALLOWED_DIRS": "${user_config.allowed_directories}",
+        "MAX_MB": "${user_config.max_file_mb}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "health_check",
+      "description": "Report server health."
+    },
+    {
+      "name": "read_file",
+      "description": "Read a file within allowed directories."
+    }
+  ],
+  "user_config": {
+    "allowed_directories": {
+      "type": "directory",
+      "title": "Allowed Directories",
+      "multiple": true,
+      "required": true,
+      "default": [
+        "${HOME}/Desktop"
+      ]
+    },
+    "max_file_mb": {
+      "type": "number",
+      "title": "Max file size (MB)",
+      "default": 8,
+      "min": 1,
+      "max": 64
+    }
+  }
+}

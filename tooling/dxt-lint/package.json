@@ -1,0 +1,24 @@
+{
+  "name": "dxt-lint",
+  "version": "1.0.0",
+  "description": "MCP Extension validator for quality and security standards",
+  "main": "dxt-lint.js",
+  "bin": {
+    "dxt-lint": "./dxt-lint.js"
+  },
+  "scripts": {
+    "test": "node dxt-lint.js ../../extensions/fs-sandbox-node"
+  },
+  "keywords": [
+    "mcp",
+    "dxt",
+    "linter",
+    "validator",
+    "claude"
+  ],
+  "author": "MCP Builds",
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

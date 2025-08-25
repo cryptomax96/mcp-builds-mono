@@ -1,0 +1,44 @@
+{
+  "dxt_version": "0.1",
+  "name": "ffprobe-lite-python",
+  "display_name": "FFprobe Lite (Python)",
+  "version": "0.1.0",
+  "description": "Safe wrapper around ffprobe for basic media metadata.",
+  "author": {
+    "name": "MCP Builds"
+  },
+  "server": {
+    "type": "python",
+    "entry_point": "server/main.py",
+    "mcp_config": {
+      "command": "python",
+      "args": [
+        "${__dirname}/server/main.py"
+      ],
+      "env": {
+        "ALLOWED_DIRS": "${user_config.allowed_directories}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "health_check",
+      "description": "Health status"
+    },
+    {
+      "name": "probe_media",
+      "description": "Run ffprobe on a media file within allowed directories"
+    }
+  ],
+  "user_config": {
+    "allowed_directories": {
+      "type": "directory",
+      "title": "Allowed Directories",
+      "multiple": true,
+      "required": true,
+      "default": [
+        "${HOME}/Desktop"
+      ]
+    }
+  }
+}

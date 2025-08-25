@@ -1,0 +1,410 @@
+{
+  "dxt_version": "0.1",
+  "name": "advanced-mcp-extension",
+  "display_name": "Advanced MCP Extension",
+  "version": "2.5.3",
+  "description": "A comprehensive MCP extension showcasing all manifest features including API integration, file operations, and advanced configuration options",
+  "author": {
+    "name": "MCP Builds Team",
+    "email": "team@mcp-builds.dev",
+    "url": "https://mcp-builds.dev"
+  },
+  "contributors": [
+    {
+      "name": "Jane Developer",
+      "email": "jane@example.com",
+      "role": "Core Developer"
+    },
+    {
+      "name": "John Tester",
+      "email": "john@example.com",
+      "role": "QA Lead"
+    }
+  ],
+  "license": "MIT",
+  "icon": "assets/icon.png",
+  "homepage": "https://github.com/mcp-builds/advanced-extension",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mcp-builds/advanced-extension.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mcp-builds/advanced-extension/issues",
+    "email": "bugs@mcp-builds.dev"
+  },
+  "documentation": "https://docs.mcp-builds.dev/extensions/advanced",
+  "changelog": "https://github.com/mcp-builds/advanced-extension/blob/main/CHANGELOG.md",
+  "compatibility": {
+    "dxt_version": ">=0.1.0 <0.2.0",
+    "claude_desktop": ">=1.0.0",
+    "operating_systems": ["darwin", "linux", "win32"],
+    "architectures": ["x64", "arm64"]
+  },
+  "categories": [
+    "developer-tools",
+    "productivity",
+    "file-management",
+    "api-integration"
+  ],
+  "keywords": [
+    "mcp",
+    "claude",
+    "automation",
+    "file-system",
+    "api",
+    "github",
+    "productivity"
+  ],
+  "server": {
+    "type": "python",
+    "entry_point": "server/main.py",
+    "python_version": ">=3.11",
+    "mcp_config": {
+      "command": "python",
+      "args": [
+        "${__dirname}/server/main.py",
+        "--config",
+        "${__dirname}/config/server.json"
+      ],
+      "env": {
+        "PYTHONPATH": "${__dirname}/server/lib",
+        "MCP_ENV": "production",
+        "ALLOWED_DIRS": "${user_config.allowed_directories}",
+        "GITHUB_TOKEN": "${user_config.github_token}",
+        "RATE_LIMIT": "${user_config.rate_limit}",
+        "LOG_LEVEL": "${user_config.log_level}",
+        "TELEMETRY_ENABLED": "${user_config.telemetry_opt_in}"
+      },
+      "cwd": "${__dirname}"
+    }
+  },
+  "platform_overrides": {
+    "win32": {
+      "server": {
+        "mcp_config": {
+          "command": "python.exe",
+          "env": {
+            "PYTHONPATH": "${__dirname}\\server\\lib"
+          }
+        }
+      }
+    },
+    "darwin": {
+      "server": {
+        "mcp_config": {
+          "env": {
+            "OBJC_DISABLE_INITIALIZE_FORK_SAFETY": "YES"
+          }
+        }
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "health_check",
+      "description": "Check server health, memory usage, and uptime",
+      "category": "system"
+    },
+    {
+      "name": "capabilities",
+      "description": "List all available tools, prompts, and server limits",
+      "category": "system"
+    },
+    {
+      "name": "read_file_sandboxed",
+      "description": "Read a file within configured allowed directories with size limits",
+      "category": "file-operations"
+    },
+    {
+      "name": "write_file_sandboxed",
+      "description": "Write or update a file within allowed directories",
+      "category": "file-operations"
+    },
+    {
+      "name": "list_directory",
+      "description": "List contents of a directory with filtering options",
+      "category": "file-operations"
+    },
+    {
+      "name": "search_files",
+      "description": "Search for files by name or content within allowed directories",
+      "category": "file-operations"
+    },
+    {
+      "name": "github_create_issue",
+      "description": "Create a new GitHub issue in a specified repository",
+      "category": "github"
+    },
+    {
+      "name": "github_list_issues",
+      "description": "List GitHub issues with filtering options",
+      "category": "github"
+    },
+    {
+      "name": "github_update_issue",
+      "description": "Update an existing GitHub issue",
+      "category": "github"
+    },
+    {
+      "name": "analyze_code",
+      "description": "Analyze code files for patterns, complexity, and issues",
+      "category": "analysis"
+    },
+    {
+      "name": "generate_report",
+      "description": "Generate various types of reports from data",
+      "category": "analysis"
+    }
+  ],
+  "tools_generated": true,
+  "prompts": [
+    {
+      "name": "analyze_project",
+      "description": "Analyze an entire project directory",
+      "arguments": [
+        {
+          "name": "project_path",
+          "description": "Root path of the project to analyze",
+          "required": true,
+          "type": "directory"
+        },
+        {
+          "name": "depth",
+          "description": "How deep to analyze (shallow, normal, deep)",
+          "required": false,
+          "default": "normal",
+          "type": "string",
+          "enum": ["shallow", "normal", "deep"]
+        }
+      ]
+    },
+    {
+      "name": "create_github_pr",
+      "description": "Create a pull request with suggested changes",
+      "arguments": [
+        {
+          "name": "repository",
+          "description": "Repository in format owner/repo",
+          "required": true,
+          "type": "string",
+          "pattern": "^[\\w-]+/[\\w-]+$"
+        },
+        {
+          "name": "branch",
+          "description": "Target branch for the PR",
+          "required": false,
+          "default": "main",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "daily_standup",
+      "description": "Generate a daily standup report",
+      "arguments": [
+        {
+          "name": "date",
+          "description": "Date for the standup (YYYY-MM-DD)",
+          "required": false,
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        }
+      ]
+    }
+  ],
+  "user_config": {
+    "allowed_directories": {
+      "type": "directory",
+      "title": "Allowed Directories",
+      "description": "Directories this extension can read and write to",
+      "multiple": true,
+      "required": true,
+      "default": [
+        "${HOME}/Documents",
+        "${HOME}/Projects"
+      ],
+      "validation": {
+        "min_items": 1,
+        "max_items": 10
+      }
+    },
+    "github_token": {
+      "type": "secret",
+      "title": "GitHub Personal Access Token",
+      "description": "PAT for GitHub API access (stored in OS keychain)",
+      "required": false,
+      "placeholder": "ghp_...",
+      "validation": {
+        "pattern": "^ghp_[a-zA-Z0-9]{36}$"
+      }
+    },
+    "github_username": {
+      "type": "string",
+      "title": "GitHub Username",
+      "description": "Your GitHub username",
+      "required": false,
+      "placeholder": "octocat"
+    },
+    "rate_limit": {
+      "type": "number",
+      "title": "Rate Limit",
+      "description": "Maximum requests per minute",
+      "required": false,
+      "default": 60,
+      "validation": {
+        "min": 1,
+        "max": 1000
+      }
+    },
+    "max_file_size_mb": {
+      "type": "number",
+      "title": "Max File Size (MB)",
+      "description": "Maximum file size in megabytes",
+      "required": false,
+      "default": 100,
+      "validation": {
+        "min": 1,
+        "max": 1000
+      }
+    },
+    "log_level": {
+      "type": "select",
+      "title": "Log Level",
+      "description": "Logging verbosity",
+      "required": false,
+      "default": "info",
+      "options": [
+        { "value": "debug", "label": "Debug" },
+        { "value": "info", "label": "Info" },
+        { "value": "warning", "label": "Warning" },
+        { "value": "error", "label": "Error" }
+      ]
+    },
+    "telemetry_opt_in": {
+      "type": "boolean",
+      "title": "Enable Telemetry",
+      "description": "Help improve the extension by sending anonymous usage data",
+      "required": false,
+      "default": false
+    },
+    "features": {
+      "type": "object",
+      "title": "Feature Flags",
+      "description": "Enable or disable specific features",
+      "required": false,
+      "properties": {
+        "github_integration": {
+          "type": "boolean",
+          "default": true
+        },
+        "code_analysis": {
+          "type": "boolean",
+          "default": true
+        },
+        "report_generation": {
+          "type": "boolean",
+          "default": false
+        },
+        "experimental_features": {
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "custom_headers": {
+      "type": "array",
+      "title": "Custom HTTP Headers",
+      "description": "Additional headers for API requests",
+      "required": false,
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "required": true
+          },
+          "value": {
+            "type": "string",
+            "required": true
+          }
+        }
+      }
+    }
+  },
+  "resource_limits": {
+    "max_memory_mb": 512,
+    "max_cpu_percent": 25,
+    "max_file_size_mb": 100,
+    "max_concurrent_operations": 5,
+    "max_file_handles": 100,
+    "timeout_seconds": 30,
+    "max_response_size_mb": 10
+  },
+  "security": {
+    "sandbox_enabled": true,
+    "network_enabled": true,
+    "allowed_domains": [
+      "api.github.com",
+      "raw.githubusercontent.com"
+    ],
+    "blocked_paths": [
+      "/etc/passwd",
+      "/etc/shadow",
+      "~/.ssh",
+      "~/.aws",
+      "${APPDATA}/Microsoft/Credentials"
+    ],
+    "require_user_confirmation": [
+      "write_file_sandboxed",
+      "github_create_issue",
+      "github_update_issue"
+    ]
+  },
+  "dependencies": {
+    "python": [
+      "mcp>=1.0.0",
+      "pydantic>=2.0.0",
+      "aiofiles>=23.0.0",
+      "httpx>=0.25.0",
+      "pygithub>=2.0.0"
+    ],
+    "system": [
+      "git",
+      "curl"
+    ]
+  },
+  "post_install": {
+    "message": "Thank you for installing Advanced MCP Extension! Please configure your GitHub token in settings to enable all features.",
+    "actions": [
+      {
+        "type": "open_url",
+        "url": "https://docs.mcp-builds.dev/extensions/advanced/quickstart"
+      }
+    ]
+  },
+  "telemetry": {
+    "enabled": false,
+    "endpoint": "https://telemetry.mcp-builds.dev/v1/events",
+    "events": [
+      "extension_installed",
+      "extension_updated",
+      "tool_executed",
+      "error_occurred"
+    ]
+  },
+  "experimental": {
+    "ai_suggestions": true,
+    "auto_update": false,
+    "beta_features": [
+      "voice_commands",
+      "scheduled_tasks",
+      "workflow_automation"
+    ]
+  },
+  "metadata": {
+    "build_date": "2024-01-15T10:30:00Z",
+    "build_number": "1234",
+    "git_commit": "abc123def456",
+    "ci_pipeline": "https://github.com/mcp-builds/advanced-extension/actions/runs/7654321"
+  }
+}

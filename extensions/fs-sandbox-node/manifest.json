@@ -1,0 +1,64 @@
+{
+  "dxt_version": "0.1",
+  "name": "fs-sandbox-node",
+  "display_name": "File System (Sandboxed) \u2013 Node",
+  "version": "0.1.0",
+  "description": "Read/search files within user-approved directories.",
+  "author": {
+    "name": "MCP Builds"
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "server/dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/dist/index.js"
+      ],
+      "env": {
+        "ALLOWED_DIRS": "${user_config.allowed_directories}",
+        "MAX_MB": "${user_config.max_file_mb}",
+        "RATE_QPS": "${user_config.rate_qps}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "health_check",
+      "description": "Report server health."
+    },
+    {
+      "name": "read_file",
+      "description": "Read a file within allowed directories."
+    },
+    {
+      "name": "search_glob",
+      "description": "Glob search within allowed directories."
+    }
+  ],
+  "user_config": {
+    "allowed_directories": {
+      "type": "directory",
+      "title": "Allowed Directories",
+      "multiple": true,
+      "required": true,
+      "default": [
+        "${HOME}/Desktop"
+      ]
+    },
+    "max_file_mb": {
+      "type": "number",
+      "title": "Max file size (MB)",
+      "default": 8,
+      "min": 1,
+      "max": 64
+    },
+    "rate_qps": {
+      "type": "number",
+      "title": "Max tool calls per second",
+      "default": 5,
+      "min": 1,
+      "max": 50
+    }
+  }
+}

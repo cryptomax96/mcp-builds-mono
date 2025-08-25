@@ -1,0 +1,47 @@
+{
+  "dxt_version": "0.1",
+  "name": "prompt-composer-node",
+  "display_name": "Prompt Composer (Node)",
+  "version": "0.1.0",
+  "description": "Compose prompts from reusable blocks.",
+  "author": {
+    "name": "MCP Builds"
+  },
+  "server": {
+    "type": "node",
+    "entry_point": "server/dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/dist/index.js"
+      ]
+    }
+  },
+  "tools": [
+    {
+      "name": "health_check",
+      "description": "Health status"
+    },
+    {
+      "name": "create_block",
+      "description": "Create/update a prompt block by name"
+    },
+    {
+      "name": "list_blocks",
+      "description": "List stored blocks"
+    },
+    {
+      "name": "compose_prompt",
+      "description": "Compose final prompt from an ordered list of block names"
+    }
+  ],
+  "user_config": {
+    "max_blocks": {
+      "type": "number",
+      "title": "Max stored blocks",
+      "default": 50,
+      "min": 1,
+      "max": 500
+    }
+  }
+}

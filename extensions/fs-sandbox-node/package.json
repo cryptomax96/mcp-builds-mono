@@ -1,0 +1,20 @@
+{
+  "name": "fs-sandbox-node",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node server/src/index.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.1.1",
+    "zod": "^3.23.8",
+    "glob": "^10.3.10"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0",
+    "@types/node": "^20.11.0",
+    "ts-node": "^10.9.2"
+  }
+}

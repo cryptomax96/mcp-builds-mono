@@ -1,0 +1,433 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run security scan daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Release type (major, minor, patch)'
+        required: false
+        default: 'patch'
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # ============================================================================
+  # VALIDATION & LINTING
+  # ============================================================================
+  validate:
+    name: Validate Extensions
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        extension:
+          - fs-sandbox-node
+          - fs-sandbox-python
+          - ffprobe-lite-python
+          - prompt-composer-node
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup DXT CLI
+        run: |
+          npm install -g @anthropic-ai/dxt
+          dxt --version
+      
+      - name: Validate manifest
+        run: |
+          cd extensions/${{ matrix.extension }}
+          dxt validate
+      
+      - name: Check manifest schema
+        run: |
+          cd extensions/${{ matrix.extension }}
+          python3 -m json.tool manifest.json > /dev/null
+      
+      - name: Check file references
+        run: |
+          cd extensions/${{ matrix.extension }}
+          # Check that all files referenced in manifest exist
+          for file in $(grep -o '"[^"]*"' manifest.json | tr -d '"' | grep -E '\.(js|py|ts|png|jpg)$'); do
+            if [ ! -f "$file" ]; then
+              echo "Missing file: $file"
+              exit 1
+            fi
+          done
+
+  # ============================================================================
+  # NODE.JS EXTENSIONS
+  # ============================================================================
+  test-node:
+    name: Test Node.js Extensions
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        node: [18, 20]
+        extension:
+          - fs-sandbox-node
+          - prompt-composer-node
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+          cache-dependency-path: extensions/${{ matrix.extension }}/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd extensions/${{ matrix.extension }}
+          npm ci || npm install
+      
+      - name: Run linter
+        run: |
+          cd extensions/${{ matrix.extension }}
+          npm run lint --if-present || npx eslint . --ext .ts,.js
+      
+      - name: Type check
+        run: |
+          cd extensions/${{ matrix.extension }}
+          npm run type-check --if-present || npx tsc --noEmit
+      
+      - name: Run tests
+        run: |
+          cd extensions/${{ matrix.extension }}
+          npm test --if-present
+        env:
+          CI: true
+      
+      - name: Build
+        run: |
+          cd extensions/${{ matrix.extension }}
+          npm run build
+      
+      - name: Test packaging
+        run: |
+          cd extensions/${{ matrix.extension }}
+          npx @anthropic-ai/dxt pack --dry-run
+
+  # ============================================================================
+  # PYTHON EXTENSIONS
+  # ============================================================================
+  test-python:
+    name: Test Python Extensions
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python: ['3.11', '3.12']
+        extension:
+          - fs-sandbox-python
+          - ffprobe-lite-python
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: 'pip'
+          cache-dependency-path: extensions/${{ matrix.extension }}/requirements*.txt
+      
+      - name: Install dependencies
+        run: |
+          cd extensions/${{ matrix.extension }}
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install -r requirements-dev.txt 2>/dev/null || pip install pytest pytest-asyncio pytest-cov mypy ruff
+      
+      - name: Run linter (Ruff)
+        run: |
+          cd extensions/${{ matrix.extension }}
+          ruff check . || python -m ruff check .
+      
+      - name: Type check (mypy)
+        run: |
+          cd extensions/${{ matrix.extension }}
+          mypy . --ignore-missing-imports || python -m mypy . --ignore-missing-imports
+      
+      - name: Run tests
+        run: |
+          cd extensions/${{ matrix.extension }}
+          pytest -v --cov=server --cov-report=term-missing || python -m pytest
+        env:
+          CI: true
+      
+      - name: Test packaging
+        run: |
+          cd extensions/${{ matrix.extension }}
+          npx @anthropic-ai/dxt pack --dry-run
+
+  # ============================================================================
+  # SECURITY SCANNING
+  # ============================================================================
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Run Gitleaks (secret scanning)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Node.js dependency audit
+        run: |
+          for dir in extensions/*/package.json; do
+            extension_dir=$(dirname "$dir")
+            echo "Auditing $extension_dir"
+            cd "$extension_dir"
+            npm audit --audit-level=moderate || true
+            cd - > /dev/null
+          done
+      
+      - name: Python dependency scan (safety)
+        run: |
+          pip install safety
+          for req in extensions/*/requirements.txt; do
+            echo "Scanning $req"
+            safety check -r "$req" --json || true
+          done
+      
+      - name: OWASP Dependency Check
+        uses: dependency-check/Dependency-Check_Action@main
+        with:
+          project: 'mcp-builds-mono'
+          path: '.'
+          format: 'HTML'
+      
+      - name: Upload security reports
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: security-reports
+          path: |
+            reports/
+            dependency-check-report.html
+
+  # ============================================================================
+  # PERFORMANCE TESTING
+  # ============================================================================
+  performance:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install dependencies
+        run: |
+          npm install -g autocannon
+          pip install locust pytest-benchmark
+      
+      - name: Run performance benchmarks
+        run: |
+          # Add performance test scripts here
+          echo "Performance tests would run here"
+      
+      - name: Check performance thresholds
+        run: |
+          # Verify performance meets requirements:
+          # - Health check < 100ms
+          # - Simple operations < 500ms
+          # - Memory usage < 512MB
+          echo "Performance threshold checks would run here"
+
+  # ============================================================================
+  # INTEGRATION TESTING
+  # ============================================================================
+  integration:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    needs: [test-node, test-python]
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup test environment
+        run: |
+          npm install -g @anthropic-ai/dxt
+          pip install mcp
+      
+      - name: Run host simulator tests
+        run: |
+          python tooling/host-sim/host_sim.py --test-all-extensions
+      
+      - name: Test extension interactions
+        run: |
+          # Test that extensions work together
+          echo "Integration tests would run here"
+
+  # ============================================================================
+  # BUILD & PACKAGE
+  # ============================================================================
+  build:
+    name: Build Extensions
+    runs-on: ubuntu-latest
+    needs: [validate, test-node, test-python, security]
+    if: success()
+    strategy:
+      matrix:
+        extension:
+          - fs-sandbox-node
+          - fs-sandbox-python
+          - ffprobe-lite-python
+          - prompt-composer-node
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      
+      - name: Install DXT CLI
+        run: npm install -g @anthropic-ai/dxt
+      
+      - name: Build extension
+        run: |
+          cd extensions/${{ matrix.extension }}
+          
+          # Install dependencies
+          if [ -f package.json ]; then
+            npm ci || npm install
+            npm run build --if-present
+          elif [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          
+          # Package extension
+          dxt pack
+      
+      - name: Verify package
+        run: |
+          cd extensions/${{ matrix.extension }}
+          ls -la *.dxt
+          unzip -l *.dxt
+      
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.extension }}-dxt
+          path: extensions/${{ matrix.extension }}/*.dxt
+
+  # ============================================================================
+  # RELEASE
+  # ============================================================================
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: [build, integration]
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts/
+      
+      - name: Generate changelog
+        id: changelog
+        run: |
+          # Extract version from tag
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+          
+          # Generate changelog (customize as needed)
+          echo "# Release $VERSION" > RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "## What's Changed" >> RELEASE_NOTES.md
+          git log --pretty=format:"- %s (%h)" $(git describe --tags --abbrev=0 HEAD^)..HEAD >> RELEASE_NOTES.md
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: false
+          prerelease: ${{ contains(github.ref, '-beta') || contains(github.ref, '-rc') }}
+          body_path: RELEASE_NOTES.md
+          files: |
+            artifacts/**/*.dxt
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ============================================================================
+  # DOCUMENTATION
+  # ============================================================================
+  docs:
+    name: Build Documentation
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Build docs
+        run: |
+          # Add documentation build steps
+          echo "Documentation build would run here"
+      
+      - name: Deploy to GitHub Pages
+        if: success()
+        run: |
+          # Deploy documentation
+          echo "Documentation deployment would run here"
+
+  # ============================================================================
+  # NOTIFICATION
+  # ============================================================================
+  notify:
+    name: Send Notifications
+    runs-on: ubuntu-latest
+    needs: [build, release]
+    if: always()
+    steps:
+      - name: Notify on success
+        if: success()
+        run: |
+          echo "✅ Build successful!"
+          # Add Slack/Discord/Email notifications here
+      
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "❌ Build failed!"
+          # Add Slack/Discord/Email notifications here
+
+# ============================================================================
+# WORKFLOW SUMMARY
+# ============================================================================
+# 1. Validate: Check manifest and file structure
+# 2. Test: Run tests on multiple OS and language versions
+# 3. Security: Scan for vulnerabilities and secrets
+# 4. Performance: Run benchmarks and check thresholds
+# 5. Integration: Test extension interactions
+# 6. Build: Package extensions as .dxt files
+# 7. Release: Create GitHub release with artifacts
+# 8. Documentation: Build and deploy docs
+# 9. Notify: Send status notifications
